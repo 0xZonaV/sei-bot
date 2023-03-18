@@ -13,9 +13,8 @@ export const seiFunctionBot = async (newMnemonics) => {
     const fee = calculateFee(100000, "0.02usei");
 
     for (let j=0;j<=50;j++) {
-        const transactions = [];
 
-        for (let i = 0; i <= newMnemonics.length; i += 2) {
+        for (let i = 0; i < newMnemonics.length; i += 2) {
             try {
                 const wallet1 = await DirectSecp256k1HdWallet.fromMnemonic(
                     newMnemonics[i],
@@ -41,32 +40,42 @@ export const seiFunctionBot = async (newMnemonics) => {
                 const wallet2Balances = await queryClient.cosmos.bank.v1beta1
                     .allBalances({address: firstAccountWallet2.address});
 
-                const wallet1SeiBalance = wallet1Balances.balances.find(token => token.denom === 'usei');
-                const wallet2SeiBalance = wallet2Balances.balances.find(token => token.denom === 'usei');
+                const wallet1SeiBalance = wallet1Balances.balances.find(token => token.denom === 'usei')?.amount || '0';
+                const wallet2SeiBalance = wallet2Balances.balances.find(token => token.denom === 'usei')?.amount || '0';
 
-                if (parseInt(wallet1SeiBalance?.amount) > 2001) {
+                if (parseInt(wallet1SeiBalance) > 3000) {
                     const amount = {
-                        amount: String(parseInt(wallet1SeiBalance.amount) - 2000),
-                        denom: wallet1SeiBalance.denom
+                        amount: String(parseInt(wallet1SeiBalance) - 2000),
+                        denom: 'usei'
                     };
-                    transactions.push(client1.sendTokens(firstAccountWallet1.address, firstAccountWallet2.address, [amount], fee));
+                    try {
+                        await client1.sendTokens(firstAccountWallet1.address, firstAccountWallet2.address, [amount], fee);
+                    } catch (err) {
+                        console.error(`Error occurred while sending tokens from wallet ${firstAccountWallet1.address} to ${firstAccountWallet2.address}: ${err.message}`);
+                    }
+                } else if (parseInt(wallet2SeiBalance) > 3000) {
+                    const amount = {
+                        amount: String(parseInt(wallet2SeiBalance) - 2000),
+                        denom: 'usei'
+                    };
+                    try {
+                        await client2.sendTokens(firstAccountWallet2.address, firstAccountWallet1.address, [amount], fee);
+                    } catch (err) {
+                        console.error(`Error occurred while sending tokens from wallet ${firstAccountWallet2.address} to ${firstAccountWallet1.address}: ${err.message}`);
+                    }
                 } else {
-                    const amount = {
-                        amount: String(parseInt(wallet2SeiBalance.amount) - 2000),
-                        denom: wallet2SeiBalance.denom
-                    };
-                    transactions.push(client2.sendTokens(firstAccountWallet2.address, firstAccountWallet1.address, [amount], fee));
+                    console.log('Dont have a balance');
                 }
 
-                console.log(`Done wallets: ${i} ${i + 1}`);
             } catch (err) {
                 console.log(err);
             }
+
+            console.log(`Done wallets: ${i} ${i+1}`);
         }
 
-        await Promise.all(transactions);
+        console.log(`Done iteration ${j}`);
     }
+
+    //TODO: Add sending function
 }
-
-
-
