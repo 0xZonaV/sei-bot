@@ -3,11 +3,14 @@ import {DirectSecp256k1HdWallet} from "@cosmjs/proto-signing";
 import {seiFunctionBot} from "./seibot.js";
 import {readFileSync} from "fs";
 import fs from "fs";
+import {getQueryClient} from "@sei-js/core";
 
 
 const content = readFileSync("mnemonics.txt", 'utf-8');
 const mnemonics = content.split(/\r?\n/);
+const restEndPoint = 'https://rest.atlantic-2.seinetwork.io/';
 
+const queryClient  = await getQueryClient(restEndPoint);
 
 const writeOutMnemonics = () => {
     mnemonics.forEach(element => console.log(element));
@@ -49,14 +52,48 @@ const writeOutAddressesToSend = async () => {
     fs.closeSync(fileId);
 };
 
+const checkBalances = async () => {
+    const addresses = await Promise.all(mnemonics.map(mnemonic => getAddressFromMnemonic(mnemonic)));
+
+    for (const address of addresses) {
+        try {
+            const walletBalance = await queryClient.cosmos.bank.v1beta1.allBalances({ address: address });
+
+            const walletSeiBalance = walletBalance.balances.find(token => token.denom === 'usei');
+
+            console.log(address, ' ', walletSeiBalance.amount);
+        } catch (err) {
+            console.log('Error');
+        }
+    }
+};
+
+
+const generateMnemonics = async () => {
+    const numMnemonics = readline.questionInt('Enter the number of mnemonics to generate: ');
+
+    const newMnemonics = [];
+    for (let i = 0; i < numMnemonics; i++) {
+        const mnemonic = await DirectSecp256k1HdWallet.generate(12, {prefix: 'sei'});
+        console.log(mnemonic.secret.data);
+        newMnemonics.push(mnemonic.mnemonic);
+    }
+
+    fs.appendFileSync('mnemonics.txt', '\n' + newMnemonics.join('\n'));
+    console.log(`Added ${numMnemonics} new mnemonics to mnemonics.txt`);
+
+    return newMnemonics;
+}
 
 
 while (true) {
     console.log('1. Write out all mnemonics');
     console.log('2. Write out all addresses');
     console.log('3. Write out to file addresses to send');
-    console.log('4. Start bot');
-    console.log('5. Exit');
+    console.log('4. Write out Balances');
+    console.log('5. Generate new mnemonics');
+    console.log('6. Start bot');
+    console.log('7. Exit');
 
     const choice = readline.question('Choose menu number: ');
 
@@ -74,11 +111,19 @@ while (true) {
             break;
 
         case 4:
+            await checkBalances();
+            break;
+
+        case 5:
+            await generateMnemonics();
+            break;
+
+        case 6:
             // Реализация запуска бота
             await seiFunctionBot(mnemonics);
             break;
 
-        case 5:
+        case 7:
             console.log('Exiting...');
             process.exit(0)
             break;

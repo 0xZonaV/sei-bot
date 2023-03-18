@@ -11,7 +11,7 @@ export const seiFunctionBot = async (newMnemonics) => {
     const restEndPoint = 'https://rest.atlantic-2.seinetwork.io/';
     const rpcEndPoint = 'https://rpc.atlantic-2.seinetwork.io/';
 
-    for (let i=0;i<=newMnemonics.length; i+2) {
+    for (let i=0;i<=newMnemonics.length; i+=2) {
         const wallet1 = await DirectSecp256k1HdWallet.fromMnemonic(
             newMnemonics[i],
             {prefix: 'sei'}
@@ -45,14 +45,14 @@ export const seiFunctionBot = async (newMnemonics) => {
                const wallet1SeiBalance = wallet1Balances.balances.find(token => token.denom === 'usei');
                const wallet2SeiBalance = wallet2Balances.balances.find(token => token.denom === 'usei');
 
-               if (parseInt(wallet1SeiBalance.amount) > 30000) {
-                   const amount = { amount: String(parseInt(wallet1SeiBalance.amount)-15000), denom: wallet1SeiBalance.denom };
+               if (parseInt(wallet1SeiBalance?.amount) > 2001) {
+                   const amount = { amount: String(parseInt(wallet1SeiBalance.amount)-2000), denom: wallet1SeiBalance.denom };
 
                    const resp = await client1.sendTokens(firstAccountWallet1.address, firstAccountWallet2.address, [amount], fee);
 
                    console.log('TX Wallet1:', resp);
                } else {
-                   const amount = { amount: String(parseInt(wallet2SeiBalance.amount)-15000), denom: wallet2SeiBalance.denom };
+                   const amount = { amount: String(parseInt(wallet2SeiBalance.amount)-2000), denom: wallet2SeiBalance.denom };
 
                    const resp = await client2.sendTokens(firstAccountWallet2.address, firstAccountWallet1.address, [amount], fee);
 
