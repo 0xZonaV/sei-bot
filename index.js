@@ -13,6 +13,8 @@ import {sendPostRequest, sendPostRequestToMint} from "./httpFunctions.js";
 
 const content = readFileSync("mnemonics.txt", 'utf-8');
 const mnemonics = content.split(/\r?\n/);
+const contentWithBoxes = readFileSync("mnemonicsGettingGift.txt", 'utf-8');
+const mnemonicsWithBoxes = contentWithBoxes.split(/\r?\n/);
 const restEndPoint = 'https://rest.atlantic-2.seinetwork.io/';
 
 const queryClient  = await getQueryClient(restEndPoint);
@@ -93,8 +95,6 @@ const generateMnemonics = async () => {
 const sendGiftsToNewAddresses = async () => {
     const info = await checkEligibilityInfo(mnemonics);
 
-    console.log(info)
-
     const numMnemonics = info.reduce((summ, info) => summ+info.giftsToSend, 0);
     const newMnemonics = [];
     for (let i = 0; i <= numMnemonics; i++) {
@@ -102,45 +102,46 @@ const sendGiftsToNewAddresses = async () => {
         newMnemonics.push(mnemonic.mnemonic);
     }
 
-    fs.appendFileSync('mnemonicsGettingGift.txt',  newMnemonics.join('\n'));
+    fs.appendFileSync('mnemonicsGettingGift.txt', '\n' + newMnemonics.join('\n'));
     console.log(`Added ${numMnemonics} new mnemonics to mnemonicsGettingGift.txt`);
 
     let counter = 0;
     const sendersFiltered = info.filter(info => info.giftsToSend > 0);
 
-    for (let j=0; j<=sendersFiltered.length; j++) {
-        try {
-            const senderAddress = sendersFiltered[j].senderAddress;
 
-            for (let y=counter+1; y<=sendersFiltered[j].giftsToSend; y++) {
-               try {
-                   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
-                       newMnemonics[y],
-                       {prefix: 'sei'}
-                   );
+    for (let j=0; j<sendersFiltered.length; j++) {
+        const senderAddress = sendersFiltered[j]?.senderAddress;
 
-                   const [firstAccountWallet1] = await wallet.getAccounts();
 
-                   const recipientAddress = firstAccountWallet1.address;
+        if (senderAddress) {
+            for (let y =0; y < sendersFiltered[j].giftsToSend; y++) {
+                try {
+                    const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
+                        newMnemonics[counter],
+                        {prefix: 'sei'}
+                    );
 
-                   await sendPostRequest(senderAddress,recipientAddress);
+                    const [firstAccountWallet1] = await wallet.getAccounts();
 
-                   counter++;
-               } catch (err) {
-                   console.log(`Error occurred in for: ${err.message}`)
-               }
+                    const recipientAddress = firstAccountWallet1.address;
+
+                    await sendPostRequest(senderAddress, recipientAddress);
+
+
+                    counter++;
+                } catch (err) {
+                    console.log(`Error occurred in for: ${err.message}`)
+                }
             }
-
-        } catch (err) {
-            console.log(`Error occurred in sending gifts: ${err.message}`);
         }
-
     }
+}
 
-    for (let t=0; t<newMnemonics.length; t++) {
+const mintGiftsInFile = async (mintMnemonic) => {
+    for (let t=0; t<mintMnemonic.length; t++) {
         try {
             const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
-                newMnemonics[t],
+                mintMnemonic[t],
                 {prefix: 'sei'}
             );
 
@@ -172,19 +173,25 @@ const checkForGifts = async () => {
 
 
 while (true) {
-    console.log('1. Write out all mnemonics');
-    console.log('2. Write out all addresses');
-    console.log('3. Write out to file addresses to send');
+    console.log('------------Helping functions----------------');
+    console.log('1. Write all mnemonics');
+    console.log('2. Write all addresses');
+    console.log('3. Write into file addresses to send');
     console.log('4. Check Balances');
     console.log('5. Generate new mnemonics');
-    console.log('----------------------------------');
+    console.log(' ');
+    console.log('----------------Bot start--------------------');
     console.log('6. Start bot for Treasure Hunt');
     console.log('7. Start everyday bot (NOT WORKING NOW!!)');
-    console.log('----------------------------------');
+    console.log(' ');
+    console.log('--------------Gifts functions----------------');
     console.log('8. Check Eligibility for sending gifts');
     console.log('9. Send Gifts To New generated Wallets');
-    console.log('10. Check Gifts status');
-    console.log('11. Exit');
+    console.log('10. Mint Gifts from mnemonicsGettingGift.txt');
+    console.log('11. Check Gifts status');
+    console.log(' ');
+    console.log('---------------------------------------------');
+    console.log('12. Exit');
 
     const choice = readline.question('Choose menu number: ');
 
@@ -227,10 +234,14 @@ while (true) {
             break;
 
         case 10:
-            await checkGiftsInfo(mnemonics);
+            await mintGiftsInFile(mnemonicsWithBoxes);
             break;
 
         case 11:
+            await checkGiftsInfo(mnemonicsWithBoxes);
+            break;
+
+        case 12:
             console.log('Exiting...');
             process.exit(0)
             break;

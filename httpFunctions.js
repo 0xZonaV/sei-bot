@@ -64,6 +64,19 @@ export const sendPostRequestToMint = async (senderAddress) => {
 
             const result = await response.json();
 
+            if (result) {
+                if (result.status === 'success') {
+                    console.log('Success! Address: ', data.recipientAddress);
+                }
+
+                if (result.status === 'fail') {
+                    console.log('FAIL! ', result.message);
+                }
+
+                if (result.status === 'error') {
+                    console.log(result.message);
+                }
+            }
             console.log(result);
         } catch (error) {
             console.error(error);
@@ -86,7 +99,7 @@ export const getGiftsInfo = async (senderAddress) => {
 
         const result = await response.json();
 
-        console.log(`Gift status: ${result.data.giftStatus} address: ${result.data.senderAddress}`);
+        console.log(`Gift status: ${result.data.giftStatus} address: ${result.data.recipientAddress}`);
     } catch (error) {
         console.error(error);
     }
@@ -106,9 +119,14 @@ export const getEligibilityInfo = async (senderAddress) => {
 
         const result = await response.json();
 
-        const giftsAvailable = parseInt(result.data.numGifts) - parseInt(result.data.giftsSent);
 
-        eligibilityInfo = { senderAddress: senderAddress, giftsToSend: giftsAvailable, transactions: result.data.transactions };
+
+
+        if(result?.data){
+            const giftsAvailable = parseInt(result.data.numGifts) - parseInt(result.data.giftsSent);
+
+            eligibilityInfo = { senderAddress: senderAddress, giftsToSend: giftsAvailable, transactions: result.data.transactions };
+        }
 
     } catch (error) {
         console.error(error);

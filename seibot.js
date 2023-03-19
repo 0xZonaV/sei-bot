@@ -3,16 +3,12 @@ import {getSigningClient, getQueryClient} from "@sei-js/core";
 import { calculateFee  } from "@cosmjs/stargate";
 
 
-
-
-
-
 export const seiFunctionBot = async (newMnemonics) => {
     const restEndPoint = 'https://rest.atlantic-2.seinetwork.io/';
     const rpcEndPoint = 'https://rpc.atlantic-2.seinetwork.io/';
     const fee = calculateFee(100000, "0.02usei");
 
-    for (let j=0;j<=50;j++) {
+    for (let j=0;j<=2000;j++) {
 
         for (let i = 0; i < newMnemonics.length; i += 2) {
             try {
