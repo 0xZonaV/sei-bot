@@ -9,6 +9,7 @@ import {
     checkGiftsInfo,
 } from "./sendingGifts.js";
 import {sendPostRequest, sendPostRequestToMint} from "./httpFunctions.js";
+import {getFunds} from "./captcha.js";
 
 
 const content = readFileSync("mnemonics.txt", 'utf-8');
@@ -47,17 +48,37 @@ const writeOutAddresses = async () => {
 
 const writeOutAddressesToSend = async () => {
     const addresses = await Promise.all(mnemonics.map(mnemonic => getAddressFromMnemonic(mnemonic)));
-    console.log('All Addresses:');
+    console.log('All Addresses to send:');
     const fileId = fs.openSync("addressesToSend.txt", "w");
     fs.truncateSync("addressesToSend.txt");
     addresses.forEach((address,index) => {
-        if (index % 2 === 0) {
+        if (index % 2 !== 0) {
             fs.writeSync(fileId, address + "\r\n", null, "utf8");
             console.log(address);
         }
     });
     fs.closeSync(fileId);
 };
+
+const claimFromFaucet = async () => {
+
+    const addresses = await Promise.all(mnemonics.map(mnemonic => getAddressFromMnemonic(mnemonic)));
+
+    for(let i=0;i<addresses.length-1;i+=2) {
+
+        const wallet1Balances = await queryClient.cosmos.bank.v1beta1
+            .allBalances({address: addresses[i]});
+        const wallet2Balances = await queryClient.cosmos.bank.v1beta1
+            .allBalances({address: addresses[i+1]});
+
+        const wallet1SeiBalance = wallet1Balances.balances.find(token => token.denom === 'usei')?.amount || '0';
+        const wallet2SeiBalance = wallet2Balances.balances.find(token => token.denom === 'usei')?.amount || '0';
+
+        if ((parseInt(wallet1SeiBalance)+parseInt(wallet2SeiBalance) < 100000)) {
+            await getFunds(addresses[i]);
+        }
+    }
+}
 
 const checkBalances = async () => {
     const addresses = await Promise.all(mnemonics.map(mnemonic => getAddressFromMnemonic(mnemonic)));
@@ -181,17 +202,18 @@ while (true) {
     console.log('5. Generate new mnemonics');
     console.log(' ');
     console.log('----------------Bot start--------------------');
-    console.log('6. Start bot for Treasure Hunt');
-    console.log('7. Start everyday bot (NOT WORKING NOW!!)');
+    console.log('6. Faucet request');
+    console.log('7. Start bot for Treasure Hunt');
+    console.log('8. Start everyday bot (NOT WORKING NOW!!)');
     console.log(' ');
     console.log('--------------Gifts functions----------------');
-    console.log('8. Check Eligibility for sending gifts');
-    console.log('9. Send Gifts To New generated Wallets');
-    console.log('10. Mint Gifts from mnemonicsGettingGift.txt');
-    console.log('11. Check Gifts status');
+    console.log('9. Check Eligibility for sending gifts');
+    console.log('10. Send Gifts To New generated Wallets');
+    console.log('11. Mint Gifts from mnemonicsGettingGift.txt');
+    console.log('12. Check Gifts status');
     console.log(' ');
     console.log('---------------------------------------------');
-    console.log('12. Exit');
+    console.log('13. Exit');
 
     const choice = readline.question('Choose menu number: ');
 
@@ -217,31 +239,39 @@ while (true) {
             break;
 
         case 6:
-            // Реализация запуска бота
-            await seiFunctionBot(mnemonics);
+            await claimFromFaucet();
             break;
 
         case 7:
-           // await everydayBot(mnemonics);
+            // Реализация запуска бота
+            try {
+                await seiFunctionBot(mnemonics);
+            } catch (err) {
+                console.log(err);
+            }
             break;
 
         case 8:
-            await checkForGifts();
+           // await everydayBot(mnemonics);
             break;
 
         case 9:
-            await sendGiftsToNewAddresses(mnemonics);
+            await checkForGifts();
             break;
 
         case 10:
-            await mintGiftsInFile(mnemonicsWithBoxes);
+            await sendGiftsToNewAddresses(mnemonics);
             break;
 
         case 11:
-            await checkGiftsInfo(mnemonicsWithBoxes);
+            await mintGiftsInFile(mnemonicsWithBoxes);
             break;
 
         case 12:
+            await checkGiftsInfo(mnemonicsWithBoxes);
+            break;
+
+        case 13:
             console.log('Exiting...');
             process.exit(0)
             break;

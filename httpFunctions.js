@@ -100,6 +100,11 @@ export const getGiftsInfo = async (senderAddress) => {
         const result = await response.json();
 
         console.log(`Gift status: ${result.data.giftStatus} address: ${result.data.recipientAddress}`);
+
+        if (result.data.giftStatus === 'minted') {
+            return 1
+        } else return 0
+
     } catch (error) {
         console.error(error);
     }

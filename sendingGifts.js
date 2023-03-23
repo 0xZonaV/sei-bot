@@ -46,6 +46,7 @@ export const claimingGifts = async (newMnemonics) => {
 }
 
 export const checkGiftsInfo = async (newMnemonics) => {
+    let counter = 0;
 
     for (let i = 0; i < newMnemonics.length; i++) {
         try {
@@ -56,11 +57,16 @@ export const checkGiftsInfo = async (newMnemonics) => {
 
             const [firstAccountWallet1] = await wallet1.getAccounts();
 
-            await getGiftsInfo(firstAccountWallet1.address);
+            const mintedCount = await getGiftsInfo(firstAccountWallet1.address);
+
+            counter+=mintedCount;
+
         } catch (err) {
             console.log(err);
         }
     }
+
+    console.log(`Total minted gifts: ${counter}`);
 
 }
 
