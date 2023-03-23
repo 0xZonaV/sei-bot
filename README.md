@@ -29,6 +29,9 @@ npm install
 ```shell
 touch mnemonics.txt
 ```
+```shell
+touch mnemonicsGettingGift.txt
+```
 
 ### Запустите код, выполнив команду:
 ```shell
