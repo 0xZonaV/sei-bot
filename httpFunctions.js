@@ -15,7 +15,7 @@ export const sendPostRequest = async (senderAddress, recipientAddress) => {
         });
 
         const result = await response.json();
-        console.log(`Sending gift status: ${result.status}  from: ${senderAddress} to ${recipientAddress} message: ${result?.message}`);
+        console.log(`Sending gift status: ${ result.status !== 'success' ? 'Fail Message: ' +result?.message : result?.status + ' from: ' + senderAddress + ' to ' + recipientAddress}`);
     } catch (error) {
         console.error(error);
     }
@@ -99,9 +99,9 @@ export const getGiftsInfo = async (senderAddress) => {
 
         const result = await response.json();
 
-        console.log(`Gift status: ${result.data.giftStatus} address: ${result.data.recipientAddress}`);
+        console.log(`Gift status: ${result.data?.giftStatus} address: ${result.data?.recipientAddress}`);
 
-        if (result.data.giftStatus === 'minted') {
+        if (result?.data?.giftStatus === 'minted') {
             return 1
         } else return 0
 

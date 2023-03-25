@@ -11,7 +11,6 @@ import {
 import {sendPostRequest, sendPostRequestToMint} from "./httpFunctions.js";
 import {getFunds} from "./captcha.js";
 
-
 const content = readFileSync("mnemonics.txt", 'utf-8');
 const mnemonics = content.split(/\r?\n/);
 const contentWithBoxes = readFileSync("mnemonicsGettingGift.txt", 'utf-8');
@@ -116,7 +115,15 @@ const generateMnemonics = async () => {
 const sendGiftsToNewAddresses = async () => {
     const info = await checkEligibilityInfo(mnemonics);
 
-    const numMnemonics = info.reduce((summ, info) => summ+info.giftsToSend, 0);
+    const numMnemonics = info.reduce((summ, info) => {
+        if (typeof info.giftsToSend === 'number') {
+            console.log(info.giftsToSend)
+            return summ+info.giftsToSend
+        }
+
+        return summ
+
+    }, 0);
     const newMnemonics = [];
     for (let i = 0; i <= numMnemonics; i++) {
         const mnemonic = await DirectSecp256k1HdWallet.generate(12, {prefix: 'sei'});
@@ -148,6 +155,7 @@ const sendGiftsToNewAddresses = async () => {
 
                     await sendPostRequest(senderAddress, recipientAddress);
 
+                    await new Promise(resolve => setTimeout(resolve, 1500));
 
                     counter++;
                 } catch (err) {
@@ -184,7 +192,9 @@ const checkForGifts = async () => {
     info.map(wallet => {
         const {senderAddress, transactions, giftsToSend} = wallet;
 
-        counter=counter+giftsToSend;
+        if (typeof giftsToSend === "number") {
+            counter = counter + giftsToSend;
+        }
 
         console.log(`Address: ${senderAddress} transactions: ${transactions}, gifts available: ${giftsToSend}`);
     });

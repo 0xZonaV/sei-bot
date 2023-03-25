@@ -86,7 +86,8 @@ export const checkEligibilityInfo = async (newMnemonics) => {
 
            const info = await getEligibilityInfo(firstAccountWallet1.address);
 
-            eligibilityInfo.push(info);
+           if (info) eligibilityInfo.push(info);
+
 
         } catch (err) {
             console.log(err.message);
