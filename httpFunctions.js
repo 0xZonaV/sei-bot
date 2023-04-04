@@ -139,3 +139,58 @@ export const getEligibilityInfo = async (senderAddress) => {
 
     return eligibilityInfo
 }
+
+export const revealNFT = async (address) => {
+    const url = `https://atlantic-2.sunken-treasure.seinetwork.io/reveal`;
+    const sendData = {
+        address: address,
+    };
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(sendData)
+        });
+
+        await response.json();
+    } catch (error) {
+        console.error(error);
+    }
+
+
+    const url2 = `https://atlantic-2.sunken-treasure.seinetwork.io/nfts?address=${address}`;
+
+    try {
+        const response = await fetch(url2, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+
+        const result = await response.json();
+        if (result) {
+            if (result.status === 'success') {
+                if (result.data.tokens[0]?.attributes[1]?.value) {
+                    console.log('Success! Address: ', address, 'Rarity:', result.data.tokens[0].attributes[1].value);
+                    return result.data.tokens[0].attributes[1].value
+                } else {
+                    console.log('Cant find NFT');
+                }
+            }
+
+            if (result.status === 'fail') {
+                console.log('FAIL! ', result.message);
+            }
+
+            if (result.status === 'error') {
+                console.log(result.message);
+            }
+        }
+    } catch (error) {
+        console.log(error)
+    }
+}

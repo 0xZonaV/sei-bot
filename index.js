@@ -6,7 +6,7 @@ import fs from "fs";
 import {getQueryClient} from "@sei-js/core";
 import {
     checkEligibilityInfo,
-    checkGiftsInfo,
+    checkGiftsInfo, revealGifts,
 } from "./sendingGifts.js";
 import {sendPostRequest, sendPostRequestToMint} from "./httpFunctions.js";
 import {getFunds} from "./captcha.js";
@@ -221,9 +221,10 @@ while (true) {
     console.log('10. Send Gifts To New generated Wallets');
     console.log('11. Mint Gifts from mnemonicsGettingGift.txt');
     console.log('12. Check Gifts status');
+    console.log('13. Reveal Gifts');
     console.log(' ');
     console.log('---------------------------------------------');
-    console.log('13. Exit');
+    console.log('14. Exit');
 
     const choice = readline.question('Choose menu number: ');
 
@@ -282,6 +283,10 @@ while (true) {
             break;
 
         case 13:
+            await revealGifts(mnemonicsWithBoxes);
+            break;
+
+        case 14:
             console.log('Exiting...');
             process.exit(0)
             break;

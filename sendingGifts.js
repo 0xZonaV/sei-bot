@@ -1,5 +1,5 @@
 import {DirectSecp256k1HdWallet} from "@cosmjs/proto-signing";
-import {getEligibilityInfo, getGiftsInfo, sendPostRequest, sendPostRequestToMint} from "./httpFunctions.js";
+import {getEligibilityInfo, getGiftsInfo, revealNFT, sendPostRequest, sendPostRequestToMint} from "./httpFunctions.js";
 
 
 export const sendingGifts = async (newMnemonics) => {
@@ -59,6 +59,8 @@ export const checkGiftsInfo = async (newMnemonics) => {
 
             const mintedCount = await getGiftsInfo(firstAccountWallet1.address);
 
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
             counter+=mintedCount;
 
         } catch (err) {
@@ -95,6 +97,52 @@ export const checkEligibilityInfo = async (newMnemonics) => {
     }
 
     return eligibilityInfo;
+}
+
+export const revealGifts = async (mnemonics) => {
+    const rarityResult = {
+        common: 0,
+        uncommon: 0,
+        rare: 0,
+        mythic: 0,
+    }
+
+    let {rare, common, mythic, uncommon} = rarityResult;
+
+    for (let i = 0; i < mnemonics.length; i++) {
+        try {
+            const wallet1 = await DirectSecp256k1HdWallet.fromMnemonic(
+                mnemonics[i],
+                {prefix: 'sei'}
+            );
+
+            const [firstAccountWallet1] = await wallet1.getAccounts();
+
+            const rarity = await revealNFT(firstAccountWallet1.address);
+
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            switch (rarity) {
+                case 'common':
+                    common = common + 1
+                    break;
+                case 'uncommon':
+                    uncommon = uncommon + 1
+                    break;
+                case 'rare':
+                    rare = rare + 1
+                    break;
+                case 'mythic':
+                    mythic = mythic + 1
+                    break;
+            }
+
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    console.log(`Gifts results: Common: ${common} Uncommon: ${uncommon} Rare: ${rare} Mythic: ${mythic}`);
 }
 
 
