@@ -141,26 +141,8 @@ export const getEligibilityInfo = async (senderAddress) => {
 }
 
 export const revealNFT = async (address) => {
-    const url = `https://atlantic-2.sunken-treasure.seinetwork.io/reveal`;
-    const sendData = {
-        address: address,
-    };
-
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(sendData)
-        });
-
-        await response.json();
-    } catch (error) {
-        console.error(error);
-    }
-
-
+    let tokenID;
+    let rarity;
     const url2 = `https://atlantic-2.sunken-treasure.seinetwork.io/nfts?address=${address}`;
 
     try {
@@ -174,9 +156,11 @@ export const revealNFT = async (address) => {
         const result = await response.json();
         if (result) {
             if (result.status === 'success') {
-                if (result.data.tokens[0]?.attributes[1]?.value) {
-                    console.log('Success! Address: ', address, 'Rarity:', result.data.tokens[0].attributes[1].value);
-                    return result.data.tokens[0].attributes[1].value
+                if (result.data.tokens[0]?.attributes[0]?.value) {
+                    tokenID = result.data.tokens[0]?.attributes[0]?.value;
+                    if (result.data.tokens[0]?.attributes[1]?.value) {
+                        rarity = result.data.tokens[0]?.attributes[1]?.value;
+                    }
                 } else {
                     console.log('Cant find NFT');
                 }
@@ -188,6 +172,60 @@ export const revealNFT = async (address) => {
 
             if (result.status === 'error') {
                 console.log(result.message);
+            }
+        }
+    } catch (error) {
+        console.log(error)
+    }
+
+    const url = `https://atlantic-2.sunken-treasure.seinetwork.io/redeem`;
+    const sendData = {
+        tokenId: tokenID
+    };
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(sendData)
+        });
+
+        await response.json();
+
+    } catch (error) {
+        console.error(error);
+    }
+
+
+    try {
+        const response = await fetch(url2, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+
+        const result = await response.json();
+        if (result) {
+            if (result) {
+                if (result.status === 'success') {
+                    if (result.data.tokens[0]?.points) {
+                        console.log(`Success! For address: ${address} Rarity: ${rarity} Points: ${result.data.tokens[0]?.points}`)
+                        return { ponits: result.data.tokens[0]?.points, rarity: rarity }
+                    } else {
+                        console.log('Cant find NFT');
+                    }
+                }
+
+                if (result.status === 'fail') {
+                    console.log('FAIL! ', result.message);
+                }
+
+                if (result.status === 'error') {
+                    console.log(result.message);
+                }
             }
         }
     } catch (error) {

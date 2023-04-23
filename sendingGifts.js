@@ -107,6 +107,8 @@ export const revealGifts = async (mnemonics) => {
         mythic: 0,
     }
 
+    let pointsTotal = 0;
+
     let {rare, common, mythic, uncommon} = rarityResult;
 
     for (let i = 0; i < mnemonics.length; i++) {
@@ -118,11 +120,16 @@ export const revealGifts = async (mnemonics) => {
 
             const [firstAccountWallet1] = await wallet1.getAccounts();
 
-            const rarity = await revealNFT(firstAccountWallet1.address);
+            const result = await revealNFT(firstAccountWallet1.address);
 
             await new Promise(resolve => setTimeout(resolve, 2000));
 
-            switch (rarity) {
+            if (result?.ponits) {
+                pointsTotal = result.points + pointsTotal;
+            }
+
+
+            switch (result?.rarity) {
                 case 'common':
                     common = common + 1
                     break;
@@ -143,6 +150,7 @@ export const revealGifts = async (mnemonics) => {
     }
 
     console.log(`Gifts results: Common: ${common} Uncommon: ${uncommon} Rare: ${rare} Mythic: ${mythic}`);
+    console.log(`Total points: ${pointsTotal}`)
 }
 
 

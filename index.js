@@ -221,7 +221,7 @@ while (true) {
     console.log('10. Send Gifts To New generated Wallets');
     console.log('11. Mint Gifts from mnemonicsGettingGift.txt');
     console.log('12. Check Gifts status');
-    console.log('13. Reveal Gifts');
+    console.log('13. Check points and rarity Gifts');
     console.log(' ');
     console.log('---------------------------------------------');
     console.log('14. Exit');
